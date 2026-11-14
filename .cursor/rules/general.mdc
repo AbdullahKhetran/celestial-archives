@@ -1,0 +1,12 @@
+---
+alwaysApply: true
+---
+- Always use TypeScript (`.ts` and `.tsx` files) instead of JavaScript.
+- Prefer functional components over class components.
+- Follow clean code principles: readability, reusability, minimal side effects.
+- Always include proper types for props, state, and function returns.
+- Never use `any` unless absolutely unavoidable — use generics or utility types instead.
+- Keep imports organized: React/Next first, third-party libraries second, local files last.
+- Use named exports unless a file exports a single React component.
+- Use `const` for constants and `let` only when reassignment is required.
+- In case on conflict instructions in AGENTS.md takes prefernce.

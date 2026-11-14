@@ -1,0 +1,6 @@
+---
+alwaysApply: true
+---
+- Use JSDoc or TSDoc-style comments for complex functions and components.
+- Keep comments concise and meaningful — explain *why*, not *what*.
+- Use `// todo:` comments for pending tasks.

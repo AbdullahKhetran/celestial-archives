@@ -1,0 +1,10 @@
+---
+alwaysApply: true
+---
+- Use Tailwind utility classes for layout and styling; avoid inline styles.
+- Follow a mobile-first responsive design approach.
+- Use semantic HTML + Tailwind (e.g. `section`, `header`, `nav`, `main`, `footer`).
+- Group related Tailwind classes logically (layout, spacing, typography, colors).
+- Use `@apply` in `.css` files only for reusable patterns or complex compositions.
+- Use consistent color palette and spacing scale from Tailwind config.
+- Prefer `flex`, `grid`, and `gap` utilities for layout over margins for alignment.

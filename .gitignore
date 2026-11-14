@@ -40,6 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# local embedded Postgres
+.data/
+
 # Later
 !.env*.example # dont ignore env example files 
 notes/

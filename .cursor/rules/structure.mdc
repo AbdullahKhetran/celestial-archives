@@ -1,0 +1,17 @@
+---
+alwaysApply: true
+---
+- Use the following structure as standard:
+```
+app/
+    layout.tsx
+    page.tsx
+    components/
+    lib/
+    styles/
+    api/
+```
+- Reusable UI elements go in `app/components/`.
+- Server utilities and data-fetching functions go in `app/lib/`.
+- Use a `types/` folder for shared TypeScript interfaces and types.
+- Use a `constants/` folder for enums, configs, and environment constants.

@@ -1,0 +1,7 @@
+---
+alwaysApply: true
+---
+- Use Tailwind dark mode via the `class` strategy (configured in `tailwind.config.ts`).
+- Use accessible color contrasts and ARIA attributes.
+- Ensure buttons and links have hover, focus, and active states.
+- Use Headless UI or Radix UI for accessible component primitives when needed.
