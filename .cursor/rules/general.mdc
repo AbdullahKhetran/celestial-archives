@@ -10,3 +10,4 @@ alwaysApply: true
 - Use named exports unless a file exports a single React component.
 - Use `const` for constants and `let` only when reassignment is required.
 - In case on conflict instructions in AGENTS.md takes prefernce.
+- Keep docs and code in sync
