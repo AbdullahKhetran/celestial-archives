@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import {
   BASEMAPS,
@@ -10,8 +10,9 @@ import {
   markerKind,
   type MarkerKindId,
 } from "@/constants/map";
-import { formatCoordinate, yearEnd, yearsFrom } from "@/app/lib/archive/geo";
-import type { ArchiveSnapshot, HardwareListItem } from "@/types/archive";
+import { formatCoordinate, formatDay, yearEnd, yearsFrom } from "@/app/lib/archive/geo";
+import type { ArchiveSnapshot, EventDetail, HardwareListItem } from "@/types/archive";
+import type { EventStory } from "@/types/story";
 import { BodyTabs } from "@/app/components/body-tabs";
 import { YearRail } from "@/app/components/year-rail";
 
@@ -28,6 +29,17 @@ type ArchiveExplorerProps = {
 };
 
 type PinPosition = Pick<CSSProperties, "left" | "top">;
+
+type StoryApiResponse = {
+  data: {
+    eventId: string;
+    story: EventStory;
+  } | null;
+  error: {
+    code: string;
+    message: string;
+  } | null;
+};
 
 const LONGITUDES = [-180, -120, -60, 0, 60, 120, 180];
 const LATITUDES = [90, 60, 30, 0, -30, -60, -90];
@@ -275,31 +287,32 @@ function ClusterBubble({ items }: { items: HardwareListItem[] }) {
   const circumference = 2 * Math.PI * radius;
   const gap = parts.length > 1 ? 1.6 : 0;
   const usable = circumference - gap * parts.length;
+  const segments: Array<{ kind: MarkerKindId; length: number; dashOffset: number }> = [];
   let offset = 0;
+  for (const part of parts) {
+    const length = Math.max((part.count / total) * usable, 0.5);
+    segments.push({ kind: part.kind, length, dashOffset: offset });
+    offset += length + gap;
+  }
 
   return (
     <svg viewBox="0 0 36 36" className="size-full" aria-hidden="true">
       <circle cx="18" cy="18" r={radius} fill="none" className="stroke-white" strokeWidth="7" />
       <circle cx="18" cy="18" r="9.5" className="fill-paper" />
-      {parts.map((part) => {
-        const length = Math.max((part.count / total) * usable, 0.5);
-        const segment = (
-          <circle
-            key={part.kind}
-            cx="18"
-            cy="18"
-            r={radius}
-            fill="none"
-            className={KIND_STROKE[part.kind]}
-            strokeWidth="5"
-            strokeDasharray={`${length} ${circumference - length}`}
-            strokeDashoffset={-offset}
-            transform="rotate(-90 18 18)"
-          />
-        );
-        offset += length + gap;
-        return segment;
-      })}
+      {segments.map((part) => (
+        <circle
+          key={part.kind}
+          cx="18"
+          cy="18"
+          r={radius}
+          fill="none"
+          className={KIND_STROKE[part.kind]}
+          strokeWidth="5"
+          strokeDasharray={`${part.length} ${circumference - part.length}`}
+          strokeDashoffset={-part.dashOffset}
+          transform="rotate(-90 18 18)"
+        />
+      ))}
       <text
         x="18"
         y="18"
@@ -357,6 +370,7 @@ function toggleValue(current: string[], id: string): string[] {
 /**
  * Equirectangular map, a compact hardware-type filter, and a single year.
  * An empty type filter shows every record. Selecting one or more narrows the map.
+ * A chosen event loads its story from the archive and shows it under the map.
  */
 export default function ArchiveExplorer({ archive, initialType }: ArchiveExplorerProps) {
   const years = useMemo(() => archiveYears(archive), [archive]);
@@ -370,13 +384,21 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
     return kind ? [kind] : [];
   });
   const [selectedCluster, setSelectedCluster] = useState<string | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<EventDetail | null>(null);
+  const [story, setStory] = useState<EventStory | null>(null);
+  const [storyLoading, setStoryLoading] = useState(false);
+  const [storyError, setStoryError] = useState<string | null>(null);
+  const [storyRetry, setStoryRetry] = useState(0);
   const [view, setView] = useState<MapView>({ zoom: MIN_ZOOM, x: 0.5, y: 0.5 });
   const frameRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef(view);
   const dragRef = useRef<{ x: number; y: number } | null>(null);
   const draggedRef = useRef(false);
   const [frame, setFrame] = useState({ width: 0, height: 0 });
-  viewRef.current = view;
+
+  useLayoutEffect(() => {
+    viewRef.current = view;
+  }, [view]);
 
   useEffect(() => {
     const node = frameRef.current;
@@ -419,6 +441,41 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
     return () => node.removeEventListener("wheel", onWheel);
   }, []);
 
+  const selectedEventId = selectedEvent?.id;
+
+  useEffect(() => {
+    if (!selectedEventId) return;
+    const eventId = selectedEventId;
+    const controller = new AbortController();
+
+    async function loadStory() {
+      try {
+        const response = await fetch(`/api/events/${encodeURIComponent(eventId)}/story`, {
+          method: "POST",
+          signal: controller.signal,
+        });
+        const result = (await response.json()) as StoryApiResponse;
+        if (!response.ok || !result.data) {
+          throw new Error(result.error?.message ?? "Unable to load this story.");
+        }
+        if (result.data.eventId !== eventId) {
+          throw new Error("The storytelling response did not match the selected event.");
+        }
+        if (controller.signal.aborted) return;
+        setStory(result.data.story);
+        setStoryError(null);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        setStoryError(error instanceof Error ? error.message : "An unexpected error occurred.");
+      } finally {
+        if (!controller.signal.aborted) setStoryLoading(false);
+      }
+    }
+
+    void loadStory();
+    return () => controller.abort();
+  }, [selectedEventId, storyRetry]);
+
   const through = yearEnd(year);
   const matching = archive.hardware.filter((item) => {
     const kind = markerKind(item.type.id);
@@ -434,6 +491,29 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
   const basemap = BASEMAPS[archive.body.id];
   const world = archive.body.name;
   const onWorld = world === "Moon" ? "the Moon" : world;
+
+  // todo: call this from the selected pin once event picking is wired.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the map does not choose an event yet
+  function handleSelectEvent(event: EventDetail) {
+    setSelectedEvent(event);
+    setStory(null);
+    setStoryError(null);
+    setStoryLoading(true);
+  }
+
+  function handleCloseStory() {
+    setSelectedEvent(null);
+    setStory(null);
+    setStoryError(null);
+    setStoryLoading(false);
+  }
+
+  function handleRetryStory() {
+    setStory(null);
+    setStoryError(null);
+    setStoryLoading(true);
+    setStoryRetry((value) => value + 1);
+  }
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
@@ -665,6 +745,90 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
       <section className="surface shrink-0 px-4 py-2" aria-label="Year">
         <YearRail years={years} year={year} onChange={setYear} />
       </section>
+
+      {selectedEvent ? (
+        <section className="surface grid gap-4 p-4" aria-labelledby="event-story-heading">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="eyebrow">
+                {selectedEvent.mission.name}
+                {" · "}
+                {selectedEvent.eventType}
+              </p>
+              <h2 id="event-story-heading" className="m-0 text-2xl font-medium tracking-tight">
+                {story?.title ?? selectedEvent.title}
+              </h2>
+              <p className="quiet mt-2">
+                {selectedEvent.occurredOn ? formatDay(selectedEvent.occurredOn) : "Date unpublished"}
+                {" · "}
+                {selectedEvent.hardware?.name ?? "Mission-level event"}
+              </p>
+            </div>
+            <button
+              type="button"
+              className="hit rounded-lg border border-rule px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold dark:border-rule-inverse"
+              onClick={handleCloseStory}
+            >
+              Close
+            </button>
+          </div>
+
+          {storyLoading ? (
+            <p role="status" aria-live="polite" className="quiet">
+              Creating your space story...
+            </p>
+          ) : null}
+
+          {storyError ? (
+            <div role="alert" className="grid gap-2">
+              <p className="m-0">{storyError}</p>
+              <button
+                type="button"
+                className="hit w-fit rounded-lg border border-rule px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold dark:border-rule-inverse"
+                onClick={handleRetryStory}
+              >
+                Try again
+              </button>
+            </div>
+          ) : null}
+
+          {story && !storyLoading ? (
+            <div className="grid gap-4">
+              <p className="text-base leading-relaxed">{story.opening}</p>
+              {story.chapters.map((chapter, index) => (
+                <article
+                  key={`${index}-${chapter.title}`}
+                  className="grid gap-2 border-t border-rule pt-4 dark:border-rule-inverse"
+                >
+                  <h3 className="m-0 text-lg font-medium">{chapter.title}</h3>
+                  <p className="m-0 leading-relaxed">{chapter.content}</p>
+                </article>
+              ))}
+              <div className="rounded-xl bg-paper2 p-3 dark:bg-paper2-inverse">
+                <p className="eyebrow">What we learned</p>
+                <p className="m-0 leading-relaxed">{story.takeaway}</p>
+              </div>
+            </div>
+          ) : null}
+
+          {selectedEvent.citations.length > 0 ? (
+            <div className="grid gap-2 border-t border-rule pt-3 dark:border-rule-inverse">
+              <p className="eyebrow">NASA sources</p>
+              {selectedEvent.citations.map((citation) => (
+                <a
+                  key={citation.sourceId}
+                  href={citation.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm underline hover:text-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold"
+                >
+                  {citation.title} · {citation.publisher}
+                </a>
+              ))}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
     </div>
   );
 }
