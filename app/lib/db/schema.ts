@@ -6,10 +6,14 @@ import {
   date,
   doublePrecision,
   index,
+  jsonb,
   pgTable,
   text,
+  timestamp,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+
+import type { EventStory } from "@/types/story";
 
 export const celestialBodies = pgTable("celestial_bodies", {
   id: text("id").primaryKey(),
@@ -171,3 +175,23 @@ export const citations = pgTable(
     ),
   ],
 );
+
+export const eventStoryCache = pgTable("event_story_cache", {
+  eventId: text("event_id")
+    .primaryKey()
+    .references(() => events.id, { onDelete: "cascade" }),
+
+  sourceFingerprint: text("source_fingerprint").notNull(),
+
+  promptVersion: text("prompt_version").notNull(),
+
+  model: text("model").notNull(),
+
+  story: jsonb("story").$type<EventStory>().notNull(),
+
+  generatedAt: timestamp("generated_at", {
+    withTimezone: true,
+  })
+    .notNull()
+    .defaultNow(),
+});
