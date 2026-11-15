@@ -18,5 +18,5 @@ Coordinates, dates, and instrument lists are copied from NASA pages. When two NA
 
 - Abdul Rehman (Team Lead)
 - Zainab Khan (Project Manager)
-- Muhammad Nameer Shah (AI Integration)
+- Muhammad Nameer Shah (AI Developer)
 - Abdullah Khetran (Full Stack Developer)
