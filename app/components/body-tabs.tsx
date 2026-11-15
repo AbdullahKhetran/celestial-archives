@@ -6,7 +6,7 @@ type BodyTabsProps = {
   basePath: "/" | "/missions";
 };
 
-/** Moon and Mars. Each link is a full page so the map, filters, and ledger reload for that world. */
+/** Moon and Mars. Each link is a full page so the map reloads for that world. */
 export function BodyTabs({ bodyId, basePath }: BodyTabsProps) {
   return (
     <nav aria-label="Celestial body" className="flex flex-wrap gap-2">
@@ -18,10 +18,8 @@ export function BodyTabs({ bodyId, basePath }: BodyTabsProps) {
             key={body.id}
             href={href}
             aria-current={current ? "page" : undefined}
-            className={`rounded-full border px-3 py-1.5 font-ui text-sm no-underline hover:border-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold active:bg-gold/20 dark:hover:border-gold-inverse dark:focus-visible:outline-gold-inverse dark:active:bg-gold-inverse/20 ${
-              current
-                ? "border-gold bg-gold/15 text-ink dark:border-gold-inverse dark:bg-gold-inverse/15 dark:text-ink-inverse"
-                : "border-rule bg-control text-ink dark:border-rule-inverse dark:bg-control-inverse dark:text-ink-inverse"
+            className={`rounded-full border px-3 py-1.5 font-ui text-sm no-underline hover:border-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold active:bg-gold/20 ${
+              current ? "border-gold bg-gold/15 text-ink" : "border-rule bg-control text-ink"
             }`}
           >
             {body.name}

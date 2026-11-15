@@ -1,20 +1,3 @@
-type Coordinate = {
-  latitudeDeg: number;
-  longitudeDeg: number;
-};
-
-/**
- * Flat approximation, used only to decide whether two pins belong to the same site.
- * The default scale is the lunar one: NSSDCA states that 0.001° is about 30 m.
- */
-export function approximateMeters(a: Coordinate, b: Coordinate, metersPerDegree = 30_000): number {
-  const latitudeMeters = (a.latitudeDeg - b.latitudeDeg) * metersPerDegree;
-  const midLatitude = ((a.latitudeDeg + b.latitudeDeg) / 2) * (Math.PI / 180);
-  const longitudeMeters =
-    (a.longitudeDeg - b.longitudeDeg) * metersPerDegree * Math.cos(midLatitude);
-  return Math.hypot(latitudeMeters, longitudeMeters);
-}
-
 export function formatCoordinate(latitudeDeg: number, longitudeDeg: number): string {
   const digits = { maximumFractionDigits: 5 };
   const latitude = new Intl.NumberFormat("en-US", digits).format(Math.abs(latitudeDeg));

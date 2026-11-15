@@ -20,13 +20,13 @@ Frontend and backend are two people. Open prototype work is marked **FE** or **B
 
 ### Screens
 
-- [x] 2D Moon map with clustered pins (gold = on the surface, rust = impact, green = site pin)
+- [x] 2D Moon map. Pins that overlap on screen share one bubble, with the count inside and a donut when the group mixes types. Clicking a bubble zooms until it splits; a site that stays together opens its list
 - [x] Timeline that hides hardware not yet on the Moon, with play and scrub
 - [x] Filters for mission, type, and search
 - [x] Hardware record: preferred location, other claims, facts, events, parent and children, citations
 - [x] Mission list and mission page
 - [x] Credits page with sources and a Super Intelligence (SI) note
-- [ ] **FE** — Put a real lunar basemap under the pins (the frame is a grid and a gradient today)
+- [x] **FE** — Lunar basemap under the pins: NASA SVS LROC color mosaic (`public/maps/moon.jpg`, 0° longitude at center). Mars still has the grid only
 - [ ] **FE** — Add a short school-age story on each record: what the object was, and the science it made possible. Blocked on a story field; see [Blockers](#blockers)
 - [ ] **FE** — Add one guided path through a few objects (for example Eagle, Surveyor 3, a rover) so a judge can follow a story instead of only a catalog
 - [ ] **FE** — Keep filter and selected pin in the URL so a demo link opens on the right place. `mission` and `type` are read once from the query string; search and the selected pin are not stored, and changing a filter does not update the URL
@@ -52,7 +52,7 @@ Pages and the API share `types/archive.ts`. Rename a field in both places, or th
 Not blocked:
 
 - A guided path can be a hardcoded list of slugs the catalog already has. A path stored in the database needs a new payload first.
-- The basemap, phone check, and URL state (`q`, selected pin, writing filters back to the query string) are frontend-only. Pins and `arrivedOn` are already on each hardware item. `GET /api/hardware` already accepts `mission`, `type`, and `q`.
+- The phone check and URL state (`q`, selected pin, writing filters back to the query string) are frontend-only. The Moon basemap is in place. Pins and `arrivedOn` are already on each hardware item. `GET /api/hardware` already accepts `mission`, `type`, and `q`.
 - Fact-checking the catalog is a backend edit in `app/lib/seed/catalog.ts`, then `npm run db:seed`.
 - The credits dataset line is frontend copy. Add a source row only if that dataset should appear in the source list.
 

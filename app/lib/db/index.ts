@@ -6,7 +6,7 @@ import { migrate as migratePg } from "drizzle-orm/node-postgres/migrator";
 import { drizzle as drizzlePglite, type PgliteDatabase } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { Pool } from "pg";
-import { DATABASE_URL, MIGRATIONS_FOLDER, PGLITE_DATA_DIR } from "@/constants/database";
+import { DATABASE_URL } from "@/constants/database";
 import * as schema from "./schema";
 
 export type ArchiveDatabase =
@@ -34,7 +34,7 @@ function createDatabase(): ArchiveDatabase {
     return drizzlePg(pool, { schema });
   }
 
-  const dataDir = path.join(process.cwd(), PGLITE_DATA_DIR);
+  const dataDir = path.join(process.cwd(), ".data", "pglite");
   fs.mkdirSync(dataDir, { recursive: true });
   const client = new PGlite(dataDir);
   return drizzlePglite(client, { schema });
@@ -51,7 +51,7 @@ export function getDatabase() {
 export async function ensureDatabase() {
   if (!globalForDb.archiveReady) {
     const database = getDatabase();
-    const migrationsFolder = path.join(process.cwd(), MIGRATIONS_FOLDER);
+    const migrationsFolder = path.join(process.cwd(), "drizzle");
     globalForDb.archiveReady = (
       DATABASE_URL
         ? migratePg(database as NodePgDatabase<typeof schema>, { migrationsFolder })
