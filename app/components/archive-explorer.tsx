@@ -327,8 +327,24 @@ function ClusterBubble({ items }: { items: HardwareListItem[] }) {
   );
 }
 
+/** Events whose hardware sits in this cluster, in timeline order. */
+function eventsForCluster(timeline: EventDetail[], cluster: Cluster): EventDetail[] {
+  const ids = new Set(cluster.items.map((item) => item.id));
+  return timeline.filter((event) => event.hardware !== null && ids.has(event.hardware.id));
+}
+
 /** Stays in the frame. A card tied to the pin was clipped whenever the site sat near the middle of a zoomed map. */
-function ClusterCallout({ cluster }: { cluster: Cluster }) {
+function ClusterCallout({
+  cluster,
+  events,
+  selectedEventId,
+  onSelectEvent,
+}: {
+  cluster: Cluster;
+  events: EventDetail[];
+  selectedEventId: string | null;
+  onSelectEvent: (event: EventDetail) => void;
+}) {
   const lead = leadItem(cluster);
   if (!lead.pin) return null;
   return (
@@ -358,6 +374,30 @@ function ClusterCallout({ cluster }: { cluster: Cluster }) {
             </li>
           ))}
         </ul>
+      ) : null}
+      {events.length > 0 ? (
+        <div className="mt-2 grid gap-1 border-t border-rule pt-2">
+          <p className="eyebrow m-0">Stories</p>
+          <ul className="m-0 grid list-none gap-1 p-0">
+            {events.map((event) => (
+              <li key={event.id}>
+                <button
+                  type="button"
+                  aria-pressed={event.id === selectedEventId}
+                  className="hit w-full px-1 py-1 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold data-[pressed=true]:bg-gold/15"
+                  data-pressed={event.id === selectedEventId}
+                  onClick={() => onSelectEvent(event)}
+                >
+                  <span className="block leading-snug">{event.title}</span>
+                  <span className="quiet">
+                    {event.occurredOn ? formatDay(event.occurredOn) : "Date unpublished"}
+                    {cluster.items.length > 1 && event.hardware ? ` · ${event.hardware.name}` : ""}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
       ) : null}
     </div>
   );
@@ -394,6 +434,7 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
   const viewRef = useRef(view);
   const dragRef = useRef<{ x: number; y: number } | null>(null);
   const draggedRef = useRef(false);
+  const storyRef = useRef<HTMLElement>(null);
   const [frame, setFrame] = useState({ width: 0, height: 0 });
 
   useLayoutEffect(() => {
@@ -476,6 +517,11 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
     return () => controller.abort();
   }, [selectedEventId, storyRetry]);
 
+  useEffect(() => {
+    if (!selectedEventId) return;
+    storyRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [selectedEventId]);
+
   const through = yearEnd(year);
   const matching = archive.hardware.filter((item) => {
     const kind = markerKind(item.type.id);
@@ -492,8 +538,6 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
   const world = archive.body.name;
   const onWorld = world === "Moon" ? "the Moon" : world;
 
-  // todo: call this from the selected pin once event picking is wired.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the map does not choose an event yet
   function handleSelectEvent(event: EventDetail) {
     setSelectedEvent(event);
     setStory(null);
@@ -700,7 +744,14 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
             );
           })}
           </div>
-          {activeCluster ? <ClusterCallout cluster={activeCluster} /> : null}
+          {activeCluster ? (
+            <ClusterCallout
+              cluster={activeCluster}
+              events={eventsForCluster(archive.timeline, activeCluster)}
+              selectedEventId={selectedEvent?.id ?? null}
+              onSelectEvent={handleSelectEvent}
+            />
+          ) : null}
           <div data-zoom="true" className="absolute right-1.5 bottom-1.5 z-50 flex flex-col overflow-hidden rounded-lg border border-rule bg-paper/90">
             <button
               type="button"
@@ -747,7 +798,7 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
       </section>
 
       {selectedEvent ? (
-        <section className="surface grid gap-4 p-4" aria-labelledby="event-story-heading">
+        <section ref={storyRef} className="surface grid gap-4 p-4" aria-labelledby="event-story-heading">
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="eyebrow">
