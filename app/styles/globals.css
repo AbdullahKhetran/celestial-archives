@@ -51,6 +51,15 @@
     z-index: 1;
   }
 
+  .app-shell:has([data-credits]) > footer {
+    margin-top: -1rem;
+  }
+
+  .app-shell:has([data-credits]) article {
+    border-bottom-right-radius: 0;
+    border-bottom-left-radius: 0;
+  }
+
   .nav-link {
     @apply border-b border-transparent font-ui text-sm text-ink no-underline hover:border-gold hover:text-gold focus-visible:border-gold focus-visible:outline-none active:border-gold active:text-gold;
   }
