@@ -10,7 +10,7 @@ import {
   markerKind,
   type MarkerKindId,
 } from "@/constants/map";
-import { formatCoordinate, formatDay, yearEnd, yearsFrom } from "@/app/lib/archive/geo";
+import { formatDay, yearEnd, yearsFrom } from "@/app/lib/archive/geo";
 import type { ArchiveSnapshot, EventDetail, HardwareListItem } from "@/types/archive";
 import type { EventStory } from "@/types/story";
 import { BodyTabs } from "@/app/components/body-tabs";
@@ -327,80 +327,12 @@ function ClusterBubble({ items }: { items: HardwareListItem[] }) {
   );
 }
 
-/** Events whose hardware sits in this cluster, in timeline order. */
-function eventsForCluster(timeline: EventDetail[], cluster: Cluster): EventDetail[] {
+/** Earliest event for the lead record in this cluster, otherwise the earliest event here. */
+function storyEventForCluster(timeline: EventDetail[], cluster: Cluster): EventDetail | null {
   const ids = new Set(cluster.items.map((item) => item.id));
-  return timeline.filter((event) => event.hardware !== null && ids.has(event.hardware.id));
-}
-
-/** Stays in the frame. A card tied to the pin was clipped whenever the site sat near the middle of a zoomed map. */
-function ClusterCallout({
-  cluster,
-  events,
-  selectedEventId,
-  onSelectEvent,
-}: {
-  cluster: Cluster;
-  events: EventDetail[];
-  selectedEventId: string | null;
-  onSelectEvent: (event: EventDetail) => void;
-}) {
-  const lead = leadItem(cluster);
-  if (!lead.pin) return null;
-  return (
-    <div data-callout="true" className="absolute top-2 left-2 z-40 w-60 max-h-[calc(100%-1rem)] overflow-auto rounded-xl border border-rule bg-paper/95 p-3 shadow-lg">
-      <div className="flex items-start justify-between gap-2">
-        <p className="m-0 font-medium leading-snug">{clusterLabel(cluster)}</p>
-        <Link href={`/hardware/${lead.id}`} aria-label={`Open the record for ${lead.name}`} className="shrink-0 no-underline">
-          <svg viewBox="0 0 24 24" className="size-4" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M9 6l6 6-6 6" />
-          </svg>
-        </Link>
-      </div>
-      <p className="quiet mt-1 mb-0">
-        {lead.pin.specificity === "site" && lead.pin.inheritedFrom
-          ? `Shown at ${lead.pin.inheritedFrom.name}: `
-          : "Lat / lon: "}
-        {formatCoordinate(lead.pin.latitudeDeg, lead.pin.longitudeDeg)}
-      </p>
-      {cluster.items.length > 1 ? (
-        <ul className="m-0 mt-2 grid list-none gap-1 p-0">
-          {cluster.items.map((item) => (
-            <li key={item.id}>
-              <Link href={`/hardware/${item.id}`} className="flex items-center gap-1.5 text-sm">
-                <MarkerGlyph kind={markerKind(item.type.id) ?? "lander"} className="size-2.5 shrink-0" />
-                {item.name}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      ) : null}
-      {events.length > 0 ? (
-        <div className="mt-2 grid gap-1 border-t border-rule pt-2">
-          <p className="eyebrow m-0">Stories</p>
-          <ul className="m-0 grid list-none gap-1 p-0">
-            {events.map((event) => (
-              <li key={event.id}>
-                <button
-                  type="button"
-                  aria-pressed={event.id === selectedEventId}
-                  className="hit w-full px-1 py-1 text-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold data-[pressed=true]:bg-gold/15"
-                  data-pressed={event.id === selectedEventId}
-                  onClick={() => onSelectEvent(event)}
-                >
-                  <span className="block leading-snug">{event.title}</span>
-                  <span className="quiet">
-                    {event.occurredOn ? formatDay(event.occurredOn) : "Date unpublished"}
-                    {cluster.items.length > 1 && event.hardware ? ` · ${event.hardware.name}` : ""}
-                  </span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
-    </div>
-  );
+  const events = timeline.filter((event) => event.hardware !== null && ids.has(event.hardware.id));
+  const leadId = leadItem(cluster).id;
+  return events.find((event) => event.hardware?.id === leadId) ?? events[0] ?? null;
 }
 
 function toggleValue(current: string[], id: string): string[] {
@@ -410,7 +342,7 @@ function toggleValue(current: string[], id: string): string[] {
 /**
  * Equirectangular map, a compact hardware-type filter, and a single year.
  * An empty type filter shows every record. Selecting one or more narrows the map.
- * A chosen event loads its story from the archive and shows it under the map.
+ * Clicking a resolved pin loads its story under the year slider, and the page scrolls to it.
  */
 export default function ArchiveExplorer({ archive, initialType }: ArchiveExplorerProps) {
   const years = useMemo(() => archiveYears(archive), [archive]);
@@ -560,8 +492,15 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2">
-      <section className="surface flex min-h-0 min-w-0 flex-1 flex-col p-2" aria-labelledby="archive-map-title">
+    <div className={selectedEvent ? "flex flex-col gap-2" : "flex min-h-0 flex-1 flex-col gap-2"}>
+      <section
+        className={
+          selectedEvent
+            ? "surface flex h-[calc(100dvh-9rem)] min-h-80 shrink-0 flex-col p-2"
+            : "surface flex min-h-0 min-w-0 flex-1 flex-col p-2"
+        }
+        aria-labelledby="archive-map-title"
+      >
         <div className="mb-2 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1">
           <h2 id="archive-map-title" className="sr-only">
             Map of NASA hardware on {onWorld}
@@ -635,6 +574,7 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
             if (!(target instanceof HTMLElement)) return;
             if (target.closest("[data-pin], [data-callout], [data-zoom]")) return;
             setSelectedCluster(null);
+            handleCloseStory();
           }}
         >
           <div
@@ -726,6 +666,7 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
                   onClick={() => {
                     if (nextZoom !== null) {
                       setSelectedCluster(null);
+                      handleCloseStory();
                       setView(
                         clampView({
                           zoom: nextZoom,
@@ -736,6 +677,9 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
                       return;
                     }
                     setSelectedCluster(cluster.id);
+                    const storyEvent = storyEventForCluster(archive.timeline, cluster);
+                    if (storyEvent && storyEvent.id !== selectedEvent?.id) handleSelectEvent(storyEvent);
+                    if (!storyEvent) handleCloseStory();
                   }}
                 >
                   {cluster.items.length > 1 ? <ClusterBubble items={cluster.items} /> : <MarkerGlyph kind={kind} />}
@@ -744,14 +688,6 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
             );
           })}
           </div>
-          {activeCluster ? (
-            <ClusterCallout
-              cluster={activeCluster}
-              events={eventsForCluster(archive.timeline, activeCluster)}
-              selectedEventId={selectedEvent?.id ?? null}
-              onSelectEvent={handleSelectEvent}
-            />
-          ) : null}
           <div data-zoom="true" className="absolute right-1.5 bottom-1.5 z-50 flex flex-col overflow-hidden rounded-lg border border-rule bg-paper/90">
             <button
               type="button"
@@ -778,6 +714,7 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
               disabled={view.zoom <= MIN_ZOOM}
               onClick={() => {
                 setSelectedCluster(null);
+                handleCloseStory();
                 setView({ zoom: MIN_ZOOM, x: 0.5, y: 0.5 });
               }}
             >
@@ -812,7 +749,11 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
               <p className="quiet mt-2">
                 {selectedEvent.occurredOn ? formatDay(selectedEvent.occurredOn) : "Date unpublished"}
                 {" · "}
-                {selectedEvent.hardware?.name ?? "Mission-level event"}
+                {selectedEvent.hardware ? (
+                  <Link href={`/hardware/${selectedEvent.hardware.id}`}>{selectedEvent.hardware.name}</Link>
+                ) : (
+                  "Mission-level event"
+                )}
               </p>
             </div>
             <button
