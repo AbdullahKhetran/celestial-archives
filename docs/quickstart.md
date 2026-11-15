@@ -20,7 +20,7 @@ If the home page says the archive is not loaded, run `npm run db:seed` and refre
 | --- | --- |
 | [http://localhost:3000](http://localhost:3000) | Map, timeline, and ledger |
 | [http://localhost:3000/missions](http://localhost:3000/missions) | Missions that left hardware |
-| [http://localhost:3000/credits](http://localhost:3000/credits) | NASA sources and the AI note |
+| [http://localhost:3000/credits](http://localhost:3000/credits) | NASA sources and the Super Intelligence (SI) note |
 
 A hardware record is `/hardware/[slug]`, for example [http://localhost:3000/hardware/apollo-11-descent-stage](http://localhost:3000/hardware/apollo-11-descent-stage). A mission is `/missions/[slug]`, for example [http://localhost:3000/missions/apollo-11](http://localhost:3000/missions/apollo-11).
 

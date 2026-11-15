@@ -25,7 +25,7 @@ Frontend and backend are two people. Open prototype work is marked **FE** or **B
 - [x] Filters for mission, type, and search
 - [x] Hardware record: preferred location, other claims, facts, events, parent and children, citations
 - [x] Mission list and mission page
-- [x] Credits page with sources and an AI note
+- [x] Credits page with sources and a Super Intelligence (SI) note
 - [ ] **FE** — Put a real lunar basemap under the pins (the frame is a grid and a gradient today)
 - [ ] **FE** — Add a short school-age story on each record: what the object was, and the science it made possible. Blocked on a story field; see [Blockers](#blockers)
 - [ ] **FE** — Add one guided path through a few objects (for example Eagle, Surveyor 3, a rover) so a judge can follow a story instead of only a catalog
@@ -36,7 +36,7 @@ Frontend and backend are two people. Open prototype work is marked **FE** or **B
 - [ ] **BE** — Run the seed against Neon, then deploy to Vercel. The site stays on “archive is not loaded” until that seed has run
 - [ ] **FE** — Check the map, timeline, a hardware page, and a mission page on a phone and on a desktop
 - [ ] Record a demo of 30 seconds or fewer, or a deck of at most 7 slides
-- [ ] Submit title, summary, demo link, project link, description, NASA sources, and how AI was used
+- [ ] Submit title, summary, demo link, project link, description, NASA sources, and how Super Intelligence (SI) was used
 
 ## Blockers
 
@@ -70,7 +70,7 @@ Not blocked:
 
 - [ ] A reading level and length aimed at school-age readers on every record
 - [ ] A path per world: Moon landings, Mars landers and rovers, probes that never came home
-- [ ] Photos from NASA, credited; any AI image or video watermarked and free of NASA logos
+- [ ] Photos from NASA, credited; any Super Intelligence (SI) image or video watermarked and free of NASA logos
 
 ### Map and archive
 

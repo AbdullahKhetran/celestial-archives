@@ -41,7 +41,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <main className="px-4 pt-4 pb-8 sm:px-6">{children}</main>
         <footer className="flex flex-col gap-3 px-4 pb-6 font-ui text-sm text-muted sm:flex-row sm:items-end sm:justify-between sm:px-6 dark:text-muted-inverse">
           <span>Moon only. Coordinates are copied from the cited NASA pages.</span>
-          <Link href="/credits">Sources and AI note</Link>
+          <Link href="/credits">Sources and Super Intelligence (SI) note</Link>
         </footer>
       </body>
     </html>
