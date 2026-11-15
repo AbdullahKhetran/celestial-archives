@@ -25,3 +25,15 @@ export const conditionLabels: Record<string, string> = {
   passive: "Needs no power",
   unknown: "Condition unknown",
 };
+
+/** Plain names for the event types stored on `events.event_type`. */
+export const eventTypeLabels: Record<string, string> = {
+  launch: "Launch",
+  landing: "Landing",
+  impact: "Impact",
+  deployment: "Deployment",
+  liftoff: "Liftoff from the surface",
+  jettison: "Jettison",
+  last_contact: "Last contact",
+  shutdown: "Shutdown",
+};

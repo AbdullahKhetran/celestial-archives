@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
+import { eventTypeLabels } from "@/constants/labels";
 import {
   BASEMAPS,
   CLUSTER_LABEL_RANK,
@@ -337,6 +338,24 @@ function storyEventForCluster(timeline: EventDetail[], cluster: Cluster): EventD
 
 function toggleValue(current: string[], id: string): string[] {
   return current.includes(id) ? current.filter((item) => item !== id) : [...current, id];
+}
+
+/** Blank lines from the story model become separate paragraphs. */
+function StoryProse({ text }: { text: string }) {
+  const paragraphs = text
+    .split(/\n+/)
+    .map((paragraph) => paragraph.trim())
+    .filter((paragraph) => paragraph.length > 0);
+
+  return (
+    <div className="grid gap-2">
+      {paragraphs.map((paragraph, index) => (
+        <p key={`${index}-${paragraph}`} className="m-0 text-base leading-relaxed">
+          {paragraph}
+        </p>
+      ))}
+    </div>
+  );
 }
 
 /**
@@ -741,7 +760,7 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
               <p className="eyebrow">
                 {selectedEvent.mission.name}
                 {" · "}
-                {selectedEvent.eventType}
+                {eventTypeLabels[selectedEvent.eventType] ?? selectedEvent.eventType}
               </p>
               <h2 id="event-story-heading" className="m-0 text-2xl font-medium tracking-tight">
                 {story?.title ?? selectedEvent.title}
@@ -786,20 +805,23 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
 
           {story && !storyLoading ? (
             <div className="grid gap-4">
-              <p className="text-base leading-relaxed">{story.opening}</p>
+              <StoryProse text={story.opening} />
               {story.chapters.map((chapter, index) => (
                 <article
                   key={`${index}-${chapter.title}`}
                   className="grid gap-2 border-t border-rule pt-4 dark:border-rule-inverse"
                 >
                   <h3 className="m-0 text-lg font-medium">{chapter.title}</h3>
-                  <p className="m-0 leading-relaxed">{chapter.content}</p>
+                  <StoryProse text={chapter.content} />
                 </article>
               ))}
               <div className="rounded-xl border border-white/10 bg-white/8 p-3">
                 <p className="eyebrow">What we learned</p>
-                <p className="m-0 leading-relaxed">{story.takeaway}</p>
+                <StoryProse text={story.takeaway} />
               </div>
+              <p className="quiet m-0">
+                A language model wrote this story from the archive record. It does not add facts beyond that record.
+              </p>
             </div>
           ) : null}
 
