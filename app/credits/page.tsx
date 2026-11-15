@@ -30,8 +30,12 @@ async function CreditList() {
         image of Lunar Reconnaissance Orbiter data. It is a simple cylindrical map with 0° longitude at the center,
         the same frame as the pins. The underlying LRO archive is at the{" "}
         <a href="https://pds-geosciences.wustl.edu/missions/lro/">PDS Geosciences Node</a>. The file used here is{" "}
-        <a href="https://svs.gsfc.nasa.gov/4720/">lroc_color_2k.jpg</a> from SVS 4720. Mars does not yet have a packed
-        browse image. Its pins still use the published coordinates.
+        <a href="https://svs.gsfc.nasa.gov/4720/">lroc_color_2k.jpg</a> from SVS 4720. The Mars picture is the global
+        colour mosaic from the Mars Express High Resolution Stereo Camera, published by ESA, DLR, and Freie
+        Universität Berlin. It is a simple cylindrical photograph with 0° longitude at the center, the same frame as
+        the pins. The file used here is <a href="https://hrscteam.dlr.de/public/data/globalcolor.php">globalmosaic_rgb.jpg</a>{" "}
+        from that mosaic. The dataset is{" "}
+        <a href="https://doi.org/10.57780/esa-t4y39mj">Mars_HRSC_High-Altitude-Mosaic_V1.0</a>.
       </p>
       <h2 className="m-0 text-2xl font-medium tracking-tight">Super Intelligence (SI)</h2>
       <p className="m-0">

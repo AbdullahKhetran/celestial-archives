@@ -76,14 +76,20 @@ export type Basemap = {
 };
 
 /**
- * Browse images in public/maps. Only worlds with a NASA simple-cylindrical
- * JPEG are listed. The Moon file is the SVS LROC color map, 0° at center.
+ * Browse images in public/maps. Only worlds with a simple-cylindrical JPEG
+ * are listed. Both have 0° longitude at the center, so the same pin frame fits.
+ * The Mars file is the HRSC high-altitude colour browse image, 1280×640.
  */
 export const BASEMAPS: Partial<Record<string, Basemap>> = {
   moon: {
     src: "/maps/moon.jpg",
     title: "LROC color mosaic, NASA Scientific Visualization Studio",
     href: "https://svs.gsfc.nasa.gov/4720/",
+  },
+  mars: {
+    src: "/maps/mars.jpg",
+    title: "HRSC colour mosaic, ESA/DLR/FU Berlin",
+    href: "https://hrscteam.dlr.de/public/data/globalcolor.php",
   },
 };
 

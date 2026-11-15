@@ -26,7 +26,7 @@ Frontend and backend are two people. Open prototype work is marked **FE** or **B
 - [x] Hardware record: preferred location, other claims, facts, events, parent and children, citations
 - [x] Mission list and mission page
 - [x] Credits page with sources and a Super Intelligence (SI) note
-- [x] **FE** — Lunar basemap under the pins: NASA SVS LROC color mosaic (`public/maps/moon.jpg`, 0° longitude at center). Mars still has the grid only
+- [x] **FE** — Lunar basemap under the pins: NASA SVS LROC color mosaic (`public/maps/moon.jpg`, 0° longitude at center). Mars uses the ESA HRSC colour mosaic (`public/maps/mars.jpg`, same frame)
 - [ ] **FE** — Add a short school-age story on each record: what the object was, and the science it made possible. Blocked on a story field; see [Blockers](#blockers)
 - [ ] **FE** — Add one guided path through a few objects (for example Eagle, Surveyor 3, a rover) so a judge can follow a story instead of only a catalog
 - [ ] **FE** — Keep filter and selected pin in the URL so a demo link opens on the right place. `mission` and `type` are read once from the query string; search and the selected pin are not stored, and changing a filter does not update the URL
