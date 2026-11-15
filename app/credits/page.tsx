@@ -27,7 +27,7 @@ const BASEMAP_CREDITS = [
 async function CreditList() {
   const rows = await loadRows();
   return (
-    <article className="surface grid flex-1 content-start gap-4 px-4 pt-4 pb-10 sm:px-5 sm:pt-5 sm:pb-12">
+    <article className="surface grid flex-1 content-start gap-4 p-4 sm:p-5">
       <div>
         <p className="eyebrow">How this archive was made</p>
         <h2 className="m-0 text-2xl font-medium tracking-tight">Sources</h2>
@@ -64,7 +64,7 @@ async function CreditList() {
 
 export default function CreditsPage() {
   return (
-    <div data-credits className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <Suspense fallback={<p className="quiet">Opening credits…</p>}>
         <CreditList />
       </Suspense>
