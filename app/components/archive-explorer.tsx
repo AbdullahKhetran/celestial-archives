@@ -516,7 +516,7 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
                   type="button"
                   aria-pressed={on}
                   className={`inline-flex h-5 items-center gap-1 rounded-full border px-1.5 font-ui text-[0.65rem] leading-none hover:border-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold active:bg-gold/20 ${
-                    on ? "border-gold bg-gold/15 text-ink" : "border-rule bg-control text-ink"
+                    on ? "border-gold bg-gold/20 text-ink" : "border-white/20 bg-white/5 text-ink backdrop-blur-md"
                   }`}
                   onClick={() => setSelectedKinds((current) => toggleValue(current, kind.id))}
                 >
@@ -688,7 +688,7 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
             );
           })}
           </div>
-          <div data-zoom="true" className="absolute right-1.5 bottom-1.5 z-50 flex flex-col overflow-hidden rounded-lg border border-rule bg-paper/90">
+          <div data-zoom="true" className="glass absolute right-1.5 bottom-1.5 z-50 flex flex-col overflow-hidden rounded-lg">
             <button
               type="button"
               aria-label="Zoom in"
@@ -796,7 +796,7 @@ export default function ArchiveExplorer({ archive, initialType }: ArchiveExplore
                   <p className="m-0 leading-relaxed">{chapter.content}</p>
                 </article>
               ))}
-              <div className="rounded-xl bg-paper2 p-3 dark:bg-paper2-inverse">
+              <div className="rounded-xl border border-white/10 bg-white/8 p-3">
                 <p className="eyebrow">What we learned</p>
                 <p className="m-0 leading-relaxed">{story.takeaway}</p>
               </div>

@@ -19,7 +19,7 @@ export function BodyTabs({ bodyId, basePath }: BodyTabsProps) {
             href={href}
             aria-current={current ? "page" : undefined}
             className={`rounded-full border px-3 py-1.5 font-ui text-sm no-underline hover:border-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold active:bg-gold/20 ${
-              current ? "border-gold bg-gold/15 text-ink" : "border-rule bg-control text-ink"
+              current ? "border-gold bg-gold/20 text-ink" : "border-white/20 bg-white/5 text-ink backdrop-blur-md"
             }`}
           >
             {body.name}

@@ -29,15 +29,50 @@
 
 @layer components {
   .app-shell {
-    @apply m-0 flex h-dvh flex-col overflow-hidden bg-paper font-archive text-ink antialiased;
+    @apply relative m-0 flex h-dvh flex-col overflow-hidden bg-paper font-archive text-ink antialiased;
+  }
+
+  /* Fixed layer so glass panels can blur the public background without painting it on the panels themselves. */
+  .app-shell::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(180deg, rgb(7 12 22 / 0.42), rgb(7 12 22 / 0.18) 32%, rgb(7 12 22 / 0.22) 68%, rgb(7 12 22 / 0.5)),
+      url("/bg-image.png");
+    background-position: center;
+    background-size: cover;
+  }
+
+  .app-shell > * {
+    position: relative;
+    z-index: 1;
   }
 
   .nav-link {
     @apply border-b border-transparent font-ui text-sm text-ink no-underline hover:border-gold hover:text-gold focus-visible:border-gold focus-visible:outline-none active:border-gold active:text-gold;
   }
 
+  .glass,
   .surface {
-    @apply rounded-2xl border border-rule bg-surface;
+    /* Tailwind emits backdrop-filter through these utilities. A handwritten backdrop-filter in this layer was dropped at build time. */
+    @apply border border-white/20 bg-paper/60 backdrop-blur-xl backdrop-saturate-150;
+    box-shadow:
+      0 10px 32px rgb(0 0 0 / 0.28),
+      inset 0 1px 0 rgb(255 255 255 / 0.16);
+  }
+
+  .surface {
+    @apply rounded-2xl;
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    .glass,
+    .surface {
+      @apply bg-paper/95 backdrop-blur-none;
+    }
   }
 
   .eyebrow {
@@ -49,7 +84,7 @@
   }
 
   .tag {
-    @apply inline-block rounded-full bg-paper2 px-2 py-0.5 font-ui text-xs;
+    @apply inline-block rounded-full border border-white/15 bg-white/10 px-2 py-0.5 font-ui text-xs;
   }
 
   .field {
@@ -57,7 +92,7 @@
   }
 
   .control {
-    @apply min-w-48 rounded-lg border border-rule bg-control px-3 py-2 font-archive text-base text-ink hover:border-gold focus-visible:border-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold;
+    @apply min-w-48 rounded-lg border border-white/15 bg-paper/40 px-3 py-2 font-archive text-base text-ink backdrop-blur-md hover:border-gold focus-visible:border-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold;
   }
 
   .hit {
