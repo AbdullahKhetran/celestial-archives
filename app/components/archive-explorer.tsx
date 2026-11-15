@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   CLUSTER_LABEL_RANK,
   CLUSTER_METERS,
@@ -40,9 +41,14 @@ type ArchiveExplorerProps = {
   archive: ArchiveSnapshot;
   initialMission?: string;
   initialType?: string;
+  initialQuery?: string;
+  initialStartYear?: string;
+  initialEndYear?: string;
+  initialSort?: string;
 };
 
 type PinPosition = Pick<CSSProperties, "left" | "top">;
+type LedgerSort = "name" | "mission" | "date" | "type";
 
 type StoryApiResponse = {
   data: {
@@ -54,6 +60,13 @@ type StoryApiResponse = {
     message: string;
   } | null;
 };
+
+const SORT_OPTIONS: { id: LedgerSort; label: string }[] = [
+  { id: "name", label: "Name" },
+  { id: "mission", label: "Mission" },
+  { id: "date", label: "Arrival date" },
+  { id: "type", label: "Type" },
+];
 
 /**
  * Groups hardware that sits within CLUSTER_METERS so a landing site is one marker.
@@ -266,19 +279,51 @@ export default function ArchiveExplorer({
   archive,
   initialMission,
   initialType,
+  initialQuery,
+  initialStartYear,
+  initialEndYear,
+  initialSort,
 }: ArchiveExplorerProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const years = useMemo(
     () => archiveYears(archive),
     [archive],
   );
 
-  const [startIndex, setStartIndex] = useState(0);
-  const [endIndex, setEndIndex] = useState(years.length - 1);
+  const initialStartIndex = Math.max(
+    0,
+    years.indexOf(Number(initialStartYear)),
+  );
+
+  const initialEndIndex = Math.max(
+    initialStartIndex,
+    years.indexOf(Number(initialEndYear)),
+  );
+
+  const [startIndex, setStartIndex] =
+    useState(initialStartIndex);
+
+  const [endIndex, setEndIndex] = useState(
+    years.includes(Number(initialEndYear))
+      ? initialEndIndex
+      : years.length - 1,
+  );
+
   const [playing, setPlaying] = useState(false);
 
   const [mission, setMission] = useState(initialMission ?? "");
   const [type, setType] = useState(initialType ?? "");
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery ?? "");
+
+  const [sort, setSort] = useState<LedgerSort>(
+    initialSort === "mission" ||
+      initialSort === "date" ||
+      initialSort === "type"
+      ? initialSort
+      : "name",
+  );
 
   const [selectedCluster, setSelectedCluster] =
     useState<string | null>(null);
@@ -389,6 +434,54 @@ export default function ArchiveExplorer({
   const from = yearStart(startYear);
   const through = yearEnd(endYear);
 
+  useEffect(() => {
+    const params = new URLSearchParams(
+      searchParams.toString(),
+    );
+
+    if (mission) params.set("mission", mission);
+    else params.delete("mission");
+
+    if (type) params.set("type", type);
+    else params.delete("type");
+
+    if (query) params.set("q", query);
+    else params.delete("q");
+
+    if (startYear !== years[0]) {
+      params.set("start", String(startYear));
+    } else {
+      params.delete("start");
+    }
+
+    if (endYear !== years[years.length - 1]) {
+      params.set("end", String(endYear));
+    } else {
+      params.delete("end");
+    }
+
+    if (sort !== "name") params.set("sort", sort);
+    else params.delete("sort");
+
+    const next = params.toString();
+    const current = searchParams.toString();
+    if (next === current) return;
+    router.replace(next ? `${pathname}?${next}` : pathname, {
+      scroll: false,
+    });
+  }, [
+    endYear,
+    mission,
+    pathname,
+    query,
+    router,
+    searchParams,
+    sort,
+    startYear,
+    type,
+    years,
+  ]);
+
   const filtered = useMemo(
     () =>
       filterHardware(archive.hardware, {
@@ -398,6 +491,34 @@ export default function ArchiveExplorer({
       }),
     [archive.hardware, mission, type, query],
   );
+
+  const sortedFiltered = useMemo(() => {
+    const items = [...filtered];
+    items.sort((a, b) => {
+      if (sort === "mission") {
+        return a.mission.name.localeCompare(
+          b.mission.name,
+        );
+      }
+
+      if (sort === "type") {
+        return a.type.name.localeCompare(b.type.name);
+      }
+
+      if (sort === "date") {
+        if (!a.arrivedOn && !b.arrivedOn) {
+          return a.name.localeCompare(b.name);
+        }
+
+        if (!a.arrivedOn) return 1;
+        if (!b.arrivedOn) return -1;
+        return a.arrivedOn.localeCompare(b.arrivedOn);
+      }
+
+      return a.name.localeCompare(b.name);
+    });
+    return items;
+  }, [filtered, sort]);
 
   const arrivalYears = useMemo(() => {
     const marked = new Set<number>();
@@ -426,6 +547,36 @@ export default function ArchiveExplorer({
     placed,
     metersPerDegree,
   );
+
+  useEffect(() => {
+    if (clusters.length === 0) {
+      if (selectedCluster !== null) {
+        setSelectedCluster(null);
+      }
+
+      if (selectedHardware !== null) {
+        setSelectedHardware(null);
+      }
+      return;
+    }
+
+    const cluster =
+      clusters.find((item) => item.id === selectedCluster) ??
+      clusters[0];
+
+    const hardware =
+      cluster.items.find(
+        (item) => item.id === selectedHardware,
+      ) ?? cluster.items[0];
+
+    if (cluster.id !== selectedCluster) {
+      setSelectedCluster(cluster.id);
+    }
+
+    if (hardware && hardware.id !== selectedHardware) {
+      setSelectedHardware(hardware.id);
+    }
+  }, [clusters, selectedCluster, selectedHardware]);
 
   const world = archive.body.name;
 
@@ -478,6 +629,16 @@ export default function ArchiveExplorer({
     setStoryRetry((value) => value + 1);
   }
 
+  function handleResetFilters() {
+    setMission("");
+    setType("");
+    setQuery("");
+    setSort("name");
+    setPlaying(false);
+    setStartIndex(0);
+    setEndIndex(years.length - 1);
+  }
+
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(18rem,0.9fr)]">
       <div className="col-span-full">
@@ -489,15 +650,15 @@ export default function ArchiveExplorer({
 
       {/* Filters */}
       <form
-        className="surface col-span-full flex flex-wrap items-end gap-3 p-3"
+        className="surface col-span-full grid gap-3 p-3 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1fr)_auto]"
         onSubmit={(event) => event.preventDefault()}
       >
-        <label className="field" htmlFor="mission-filter">
+        <label className="field w-full" htmlFor="mission-filter">
           Mission
 
           <select
             id="mission-filter"
-            className="control"
+            className="control w-full min-w-0"
             value={mission}
             onChange={(event) =>
               setMission(event.target.value)
@@ -513,12 +674,12 @@ export default function ArchiveExplorer({
           </select>
         </label>
 
-        <label className="field" htmlFor="type-filter">
+        <label className="field w-full" htmlFor="type-filter">
           Type
 
           <select
             id="type-filter"
-            className="control"
+            className="control w-full min-w-0"
             value={type}
             onChange={(event) =>
               setType(event.target.value)
@@ -535,7 +696,7 @@ export default function ArchiveExplorer({
         </label>
 
         <label
-          className="field min-w-48 flex-1"
+          className="field w-full min-w-0"
           htmlFor="archive-search"
         >
           Search
@@ -554,6 +715,34 @@ export default function ArchiveExplorer({
             }
           />
         </label>
+
+        <label className="field w-full" htmlFor="ledger-sort">
+          Ledger sort
+          <select
+            id="ledger-sort"
+            className="control w-full min-w-0"
+            value={sort}
+            onChange={(event) =>
+            setSort(event.target.value as LedgerSort)
+            }
+          >
+            {SORT_OPTIONS.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.label}
+            </option>
+            ))}
+          </select>
+        </label>
+
+        <div className="flex flex-wrap items-end gap-2 lg:justify-end">
+          <button
+            type="button"
+            className="hit rounded-full border border-rule px-3 py-2 font-ui text-sm dark:border-rule-inverse"
+            onClick={handleResetFilters}
+          >
+            Reset filters
+          </button>
+        </div>
       </form>
 
       {/* Map */}
@@ -570,6 +759,14 @@ export default function ArchiveExplorer({
           role="group"
           aria-label={`Map of NASA hardware on ${onWorld}`}
         >
+          {clusters.length === 0 ? (
+            <div className="absolute inset-0 z-20 grid place-items-center p-4 text-center">
+              <p className="m-0 max-w-sm rounded-xl bg-paper/80 p-3 font-ui text-sm text-ink dark:bg-paper-inverse/80 dark:text-ink-inverse">
+                No mapped hardware matches this filter and year span. Reset filters or expand the years.
+              </p>
+            </div>
+          ) : null}
+
           {clusters.map((cluster) => (
             <button
               key={cluster.id}
@@ -604,14 +801,31 @@ export default function ArchiveExplorer({
           ))}
         </div>
 
+        <ul className="mt-3 mb-0 grid list-none gap-2 p-0 font-ui text-sm sm:grid-cols-3">
+          <li className="flex items-center gap-2">
+            <span className="inline-block size-3 rounded-full border border-gold2 bg-gold dark:border-gold2-inverse dark:bg-gold-inverse" />
+            Surface equipment
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="inline-block size-3 rounded-full border border-gold2 bg-impact dark:border-gold2-inverse dark:bg-impact-inverse" />
+            Impact
+          </li>
+          <li className="flex items-center gap-2">
+            <span className="inline-block size-3 rounded-full border border-gold2 bg-sea dark:border-gold2-inverse dark:bg-sea-inverse" />
+            Site coordinate
+          </li>
+        </ul>
+
         <p className="quiet mt-3">
           {clusters.length === 1
             ? "1 place"
             : `${clusters.length} places`}{" "}
           on {onWorld} {during(startYear, endYear)}.
           Hardware within about 2 kilometers shares one
-          marker. Gold is equipment on the surface, rust is
-          an impact, and green is a site pin.
+          marker.
+        </p>
+        <p className="quiet m-0">
+          Keyboard tip: tab to a marker and press Enter to open it.
         </p>
       </section>
 
@@ -838,17 +1052,20 @@ export default function ArchiveExplorer({
           Gold dots mark years when hardware arrived.
           Drag either end, or use the arrow keys.
         </p>
+        <p className="quiet m-0">
+          On mobile, swipe the event cards. On keyboard, focus a year thumb and use arrows (Shift jumps 5 years).
+        </p>
 
-        <div className="flex gap-2 overflow-auto pb-1">
+        <div className="flex snap-x snap-mandatory gap-2 overflow-auto pb-1">
           {startYear !== endYear &&
           yearEvents.length > 0 ? (
-            <p className="quiet m-0 shrink-0 self-center">
+            <p className="quiet m-0 shrink-0 self-center snap-start">
               Events in {endYear}.
             </p>
           ) : null}
 
           {yearEvents.length === 0 ? (
-            <p className="quiet m-0">
+            <p className="quiet m-0 snap-start">
               No dated events in {endYear}.
             </p>
           ) : null}
@@ -857,7 +1074,7 @@ export default function ArchiveExplorer({
             <button
               key={event.id}
               type="button"
-              className="hit min-w-56 shrink-0 border border-rule bg-control p-3 dark:border-rule-inverse dark:bg-control-inverse"
+              className="hit min-w-56 shrink-0 snap-start border border-rule bg-control p-3 dark:border-rule-inverse dark:bg-control-inverse"
               aria-pressed={
                 selectedEvent?.id === event.id
               }
@@ -938,13 +1155,15 @@ export default function ArchiveExplorer({
           </div>
 
           {storyLoading && (
-            <p
-              role="status"
-              aria-live="polite"
-              className="quiet"
-            >
-              Creating your space story...
-            </p>
+            <div role="status" aria-live="polite" className="grid gap-3">
+              <p className="quiet m-0">Creating your space story...</p>
+              <div className="animate-pulse space-y-2">
+                <div className="h-4 w-2/3 rounded bg-paper2 dark:bg-paper2-inverse" />
+                <div className="h-4 w-full rounded bg-paper2 dark:bg-paper2-inverse" />
+                <div className="h-4 w-11/12 rounded bg-paper2 dark:bg-paper2-inverse" />
+                <div className="h-4 w-4/5 rounded bg-paper2 dark:bg-paper2-inverse" />
+              </div>
+            </div>
           )}
 
           {storyError && (
@@ -1034,10 +1253,23 @@ export default function ArchiveExplorer({
               : `${startYear}–${endYear}`}
             .
           </p>
+          <p className="quiet m-0">
+            Sorted by{" "}
+            {SORT_OPTIONS.find(
+              (option) => option.id === sort,
+            )?.label.toLowerCase() ?? "name"}
+            .
+          </p>
         </div>
 
+        {sortedFiltered.length === 0 ? (
+          <p className="m-0">
+            No records match this filter set. Reset filters to see the full archive.
+          </p>
+        ) : null}
+
         <ul className="m-0 grid list-none gap-1 p-0">
-          {filtered.map((item) => {
+          {sortedFiltered.map((item) => {
             const outside =
               item.arrivedOn !== null &&
               (item.arrivedOn < from ||

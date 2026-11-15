@@ -8,6 +8,10 @@ type HomeSearch = {
   body?: string;
   mission?: string;
   type?: string;
+  q?: string;
+  start?: string;
+  end?: string;
+  sort?: string;
 };
 
 type HomeProps = {
@@ -44,6 +48,10 @@ async function ArchiveHome({ searchParams }: HomeProps) {
       archive={archive}
       initialMission={params.mission}
       initialType={params.type}
+      initialQuery={params.q}
+      initialStartYear={params.start}
+      initialEndYear={params.end}
+      initialSort={params.sort}
     />
   );
 }
