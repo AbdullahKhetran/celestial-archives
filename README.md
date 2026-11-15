@@ -16,6 +16,8 @@ Coordinates, dates, and instrument lists are copied from NASA pages. When two NA
 
 ## Team
 
+[Team Pizza Party](https://www.spaceappschallenge.org/2026/find-a-team/pizza-party/?tab=members) built [Celestial Archives](https://www.spaceappschallenge.org/2026/find-a-team/pizza-party/?tab=project) at the [NASA Space Apps 2026 Hackathon](https://www.spaceappschallenge.org/2026/).
+
 - Abdul Rehman (Team Lead)
 - Zainab Khan (Project Manager)
 - Muhammad Nameer Shah (AI Integration)
