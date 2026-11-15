@@ -44,5 +44,5 @@ next-env.d.ts
 .data/
 
 # Later
-!.env*.example # dont ignore env example files 
+!.env*.example
 notes/
