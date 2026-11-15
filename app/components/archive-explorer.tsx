@@ -548,36 +548,6 @@ export default function ArchiveExplorer({
     metersPerDegree,
   );
 
-  useEffect(() => {
-    if (clusters.length === 0) {
-      if (selectedCluster !== null) {
-        setSelectedCluster(null);
-      }
-
-      if (selectedHardware !== null) {
-        setSelectedHardware(null);
-      }
-      return;
-    }
-
-    const cluster =
-      clusters.find((item) => item.id === selectedCluster) ??
-      clusters[0];
-
-    const hardware =
-      cluster.items.find(
-        (item) => item.id === selectedHardware,
-      ) ?? cluster.items[0];
-
-    if (cluster.id !== selectedCluster) {
-      setSelectedCluster(cluster.id);
-    }
-
-    if (hardware && hardware.id !== selectedHardware) {
-      setSelectedHardware(hardware.id);
-    }
-  }, [clusters, selectedCluster, selectedHardware]);
-
   const world = archive.body.name;
 
   const onWorld =
@@ -586,7 +556,9 @@ export default function ArchiveExplorer({
   const activeCluster =
     clusters.find(
       (cluster) => cluster.id === selectedCluster,
-    ) ?? null;
+    ) ??
+    clusters[0] ??
+    null;
 
   const activeHardware =
     activeCluster?.items.find(
