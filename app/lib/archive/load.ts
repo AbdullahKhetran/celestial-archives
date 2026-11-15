@@ -44,8 +44,18 @@ export const loadRows = cache(async (): Promise<ArchiveRows> => {
   };
 });
 
-export async function loadArchive() {
-  return assembleArchive(await loadRows());
+export async function loadArchive(bodyId = "moon") {
+  return assembleArchive(await loadRows(), bodyId);
+}
+
+/** Unknown ids are null so a route can answer 404. A missing database still throws. */
+export async function loadBody(bodyId = "moon") {
+  try {
+    return await loadArchive(bodyId);
+  } catch (error) {
+    if (error instanceof Error && error.message.startsWith("No celestial body has id ")) return null;
+    throw error;
+  }
 }
 
 export async function loadHardware(id: string) {

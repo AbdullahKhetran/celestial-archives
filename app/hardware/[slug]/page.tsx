@@ -19,7 +19,17 @@ async function HardwareRecord({ params }: HardwarePageProps) {
     <article className="surface grid gap-4 p-4 sm:p-5">
       <div>
         <p className="eyebrow">
-          <Link href={`/?mission=${hardware.mission.id}`}>{hardware.mission.name}</Link>
+          <Link href={hardware.body.id === "moon" ? "/" : `/?body=${hardware.body.id}`}>{hardware.body.name}</Link>
+          {" · "}
+          <Link
+            href={
+              hardware.body.id === "moon"
+                ? `/?mission=${hardware.mission.id}`
+                : `/?body=${hardware.body.id}&mission=${hardware.mission.id}`
+            }
+          >
+            {hardware.mission.name}
+          </Link>
         </p>
         <h2 className="m-0 text-2xl font-medium tracking-tight">{hardware.name}</h2>
       </div>

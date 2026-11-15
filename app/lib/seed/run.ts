@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
-import type { EventInput, HardwareInput, LocationInput } from "@/types/seed";
+import { ARCHIVE_BODIES } from "@/constants/bodies";
+import type { EventInput, HardwareInput, LocationInput, MissionInput, SourceInput } from "@/types/seed";
 import { closeDatabase, ensureDatabase } from "../db";
 import {
   celestialBodies,
@@ -13,11 +14,34 @@ import {
   sources,
 } from "../db/schema";
 import {
-  hardware,
-  hardwareTypes as typeRows,
-  missions as missionRows,
-  sources as sourceRows,
+  hardware as moonHardware,
+  hardwareTypes as moonTypes,
+  missions as moonMissions,
+  sources as moonSources,
 } from "./catalog";
+import {
+  hardware as marsHardware,
+  hardwareTypes as marsTypes,
+  missions as marsMissions,
+  sources as marsSources,
+} from "./mars";
+
+const sourceRows = mergeById<SourceInput>([moonSources, marsSources], "source");
+const typeRows = mergeById([moonTypes, marsTypes], "hardware type");
+const missionRows: MissionInput[] = [...moonMissions, ...marsMissions];
+const hardware = [...moonHardware, ...marsHardware];
+
+function mergeById<T extends { id: string }>(groups: T[][], label: string): T[] {
+  const seen = new Map<string, T>();
+  for (const group of groups) {
+    for (const item of group) {
+      const previous = seen.get(item.id);
+      if (previous) throw new Error(`Duplicate ${label} id ${item.id}`);
+      seen.set(item.id, item);
+    }
+  }
+  return [...seen.values()];
+}
 
 /** Parents are inserted before children so the hardware foreign key can be set in one pass. */
 function orderHardware(items: HardwareInput[]): HardwareInput[] {
@@ -61,6 +85,7 @@ function validate(ordered: HardwareInput[]): void {
   const sourceIds = new Set(sourceRows.map((source) => source.id));
   const missionIds = new Set(missionRows.map((mission) => mission.id));
   const typeIds = new Set(typeRows.map((type) => type.id));
+  const bodyIds = new Set<string>(ARCHIVE_BODIES.map((body) => body.id));
   const hardwareIds = new Set<string>();
 
   if (new Set(missionRows.map((mission) => mission.id)).size !== missionRows.length) {
@@ -74,6 +99,8 @@ function validate(ordered: HardwareInput[]): void {
   }
 
   for (const mission of missionRows) {
+    const bodyId = mission.celestialBodyId ?? "moon";
+    if (!bodyIds.has(bodyId)) throw new Error(`${mission.id} has unknown body ${bodyId}`);
     checkSources(mission.summarySourceIds, mission.id);
     for (const event of mission.events ?? []) checkSources(event.sourceIds, event.id);
   }
@@ -191,13 +218,13 @@ async function main() {
         celestial_bodies
       RESTART IDENTITY CASCADE
     `);
-    await tx.insert(celestialBodies).values({ id: "moon", name: "Moon" });
+    await tx.insert(celestialBodies).values([...ARCHIVE_BODIES]);
     await tx.insert(sources).values(sourceRows);
     await tx.insert(hardwareTypes).values(typeRows);
     await tx.insert(missions).values(
       missionRows.map((mission) => ({
         id: mission.id,
-        celestialBodyId: "moon",
+        celestialBodyId: mission.celestialBodyId ?? "moon",
         name: mission.name,
         summary: mission.summary,
       })),

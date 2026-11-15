@@ -1,9 +1,11 @@
 import { Suspense } from "react";
 import ArchiveExplorer from "@/app/components/archive-explorer";
-import { loadArchive } from "@/app/lib/archive/load";
+import { DEFAULT_BODY_ID } from "@/constants/bodies";
+import { loadBody } from "@/app/lib/archive/load";
 import type { ArchiveSnapshot } from "@/types/archive";
 
 type HomeSearch = {
+  body?: string;
   mission?: string;
   type?: string;
 };
@@ -14,10 +16,12 @@ type HomeProps = {
 
 async function ArchiveHome({ searchParams }: HomeProps) {
   const params = await searchParams;
+  const requested = params.body?.trim() || DEFAULT_BODY_ID;
   let archive: ArchiveSnapshot | null = null;
   let message = "The archive could not be opened.";
   try {
-    archive = await loadArchive();
+    archive = await loadBody(requested);
+    if (!archive) message = "That celestial body is not in the archive.";
   } catch (error) {
     message = error instanceof Error ? error.message : message;
   }

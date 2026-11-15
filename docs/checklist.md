@@ -45,7 +45,7 @@ Pages and the API share `types/archive.ts`. Rename a field in both places, or th
 | Blocker | Waiting on | Until then |
 | --- | --- | --- |
 | School-age story on each record | **BE** — `summary` is the only prose field. Add a story on hardware and mission detail | **FE** has nothing to render except the existing summary |
-| Another world (Mars, a small body, deep space) | **BE** — the seed inserts only `moon`, and `assembleArchive` publishes only that body | **FE** body switcher has one body to show. `?body=` already 404s anything else |
+| Small body or deep space | **BE** — the seed inserts `moon` and `mars` only | **FE** switcher already lists those two. `?body=` 404s anything else |
 | Deployed demo | **BE** — `npm run db:seed` with the deployment’s `DATABASE_URL` | **FE** can verify localhost, not the public URL |
 | Admin screen to review a claim | **BE** — the API is read-only. Not required for the prototype | **FE** cannot build the review screen |
 
@@ -60,10 +60,10 @@ Not blocked:
 
 ### More worlds
 
-- [ ] Mars: Pathfinder and Sojourner, Spirit, Opportunity, Viking 1 and 2, Phoenix, InSight, Ingenuity
+- [x] Mars: Pathfinder and Sojourner, Spirit, Opportunity, Viking 1 and 2, Phoenix, InSight, Ingenuity
 - [ ] Small bodies: Dawn at Ceres, NEAR Shoemaker on Eros
 - [ ] Deep space with no surface pin: Pioneer 10 and 11, Kepler
-- [ ] A body switcher on the map and in the API (celestial body filter). Blocked until the API returns more than `moon`
+- [x] A body switcher on the map and in the API (`?body=moon` or `?body=mars`)
 - [ ] Same citation rule: NASA sources only, no guessed coordinates
 
 ### Story

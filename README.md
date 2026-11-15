@@ -1,8 +1,8 @@
 # Celestial Archives
 
-A Moon map and timeline of NASA hardware left on the surface of moon. Coordinates, dates, and instrument lists are copied from NASA pages. When two NASA numbers disagree, both stay in the record and the map uses the LROC-imaged claim. Missing coordinates are left blank.
+A map and timeline of NASA hardware left on the Moon and Mars. Coordinates, dates, and instrument lists are copied from NASA pages. When two NASA numbers disagree, both stay in the record. On the Moon the map uses the LROC-imaged claim. Missing coordinates are left blank.
 
-The weekend prototype is the Moon. The full archive is the same model extended to Mars, small bodies, and deep space, written for school-age readers.
+The map opens on the Moon. Mars is the same archive behind the Mars tab. Small bodies and deep space are still to come.
 
 ## Start locally
 

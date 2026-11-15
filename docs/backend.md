@@ -10,9 +10,10 @@ Pages do not fetch these routes. They call `loadArchive`, `loadHardware`, and `l
 | --- | --- |
 | `app/lib/db/schema.ts` | Tables |
 | `drizzle/` | Generated migrations |
-| `app/lib/seed/catalog.ts` | Lunar catalog. Edit records here |
+| `app/lib/seed/catalog.ts` | Lunar catalog. Edit Moon records here |
+| `app/lib/seed/mars.ts` | Mars catalog. Edit Mars records here |
 | `app/lib/seed/run.ts` | Validates the catalog, wipes the database, inserts it |
-| `app/lib/archive/assemble.ts` | Pins, labels, and the Moon snapshot |
+| `app/lib/archive/assemble.ts` | Pins, labels, and one world's snapshot |
 | `app/api/` | HTTP routes |
 | `types/archive.ts` | Shapes the UI and the API share |
 
@@ -37,15 +38,15 @@ Pages do not fetch these routes. They call `loadArchive`, `loadHardware`, and `l
 
 ## Routes
 
-`GET /api/missions` → `{ body, items, total }`. Each item is a mission summary plus `hardwareCount` and `pinnedCount`.
+`GET /api/missions?body=` → `{ body, items, total }`. Each item is a mission summary plus `hardwareCount` and `pinnedCount`. `body` is `moon` or `mars`. Omitted means `moon`.
 
 `GET /api/missions/[slug]` → that mission plus its `hardware` list.
 
-`GET /api/hardware?mission=&type=&q=&body=` → `{ items, total }`. `mission` and `type` are ids. `q` matches name, summary, mission name, or type name. `body` must be `moon` today.
+`GET /api/hardware?mission=&type=&q=&body=` → `{ body, items, total }`. `mission` and `type` are ids. `q` matches name, summary, mission name, or type name. `body` is `moon` or `mars`. Omitted means `moon`.
 
 `GET /api/hardware/[slug]` → one record: preferred and other location claims, facts, events, parent, children, citations.
 
-`GET /api/timeline` → `{ items, total }`, events sorted by date. Mission-level events have `hardware: null`.
+`GET /api/timeline?body=` → `{ body, items, total }`, events for that world sorted by date. Mission-level events have `hardware: null`. Omitted `body` means `moon`.
 
 Ids are slugs (`apollo-11`, `apollo-11-descent-stage`), not numbers.
 
@@ -59,7 +60,7 @@ Each hardware item has `pin` or `null`, and `arrivedOn` or `null`.
 - `arrivedOn` is the earliest event with `placesOnSurface` and a day. The timeline hides the object until that date.
 - Display labels (`restingLabel`, `conditionLabel`, `methodLabel`, `specificityLabel`) are already on the payload.
 
-The assembler only publishes the body `moon`. Another world needs a seed row and a change in `assembleArchive` before the list routes will return it.
+`loadArchive(bodyId)` publishes one world. `moon` and `mars` are seeded. Another world needs a row in `constants/bodies.ts`, a catalog, and a seed insert before the list routes will return it. A hardware or mission detail record is loaded from its own world, so a Mars slug still resolves when the map is showing the Moon.
 
 ## Seed rules
 

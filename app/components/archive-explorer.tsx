@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
-import { CLUSTER_LABEL_RANK, CLUSTER_METERS, TIMELINE_LATEST, TIMELINE_ORIGIN, TIMELINE_TICK_MS } from "@/constants/map";
+import { CLUSTER_LABEL_RANK, CLUSTER_METERS, METERS_PER_DEGREE, TIMELINE_LATEST, TIMELINE_ORIGIN, TIMELINE_TICK_MS } from "@/constants/map";
 import { filterHardware } from "@/app/lib/archive/filter";
 import { approximateMeters, formatCoordinate, formatDay, yearEnd, yearStart, yearsFrom } from "@/app/lib/archive/geo";
 import type { ArchiveSnapshot, HardwareListItem } from "@/types/archive";
+import { BodyTabs } from "@/app/components/body-tabs";
 import { YearRail } from "@/app/components/year-rail";
 
 type Cluster = {
@@ -27,12 +28,12 @@ type PinPosition = Pick<CSSProperties, "left" | "top">;
  * Groups hardware that sits within CLUSTER_METERS so a landing site is one marker.
  * The marker is placed at the mean of its members.
  */
-function clusterHardware(items: HardwareListItem[]): Cluster[] {
+function clusterHardware(items: HardwareListItem[], metersPerDegree: number): Cluster[] {
   const clusters: Cluster[] = [];
   for (const item of items) {
     if (!item.pin) continue;
     const match = clusters.find(
-      (cluster) => approximateMeters(cluster, item.pin!) < CLUSTER_METERS,
+      (cluster) => approximateMeters(cluster, item.pin!, metersPerDegree) < CLUSTER_METERS,
     );
     if (match) {
       match.items.push(item);
@@ -134,7 +135,7 @@ function archiveYears(archive: ArchiveSnapshot): number[] {
 }
 
 /**
- * Map, year span, and ledger for hardware left on the Moon.
+ * Map, year span, and ledger for hardware left on one world.
  * Several instruments share a landing site, so nearby records share one marker.
  * The year control is a window: the map keeps records that arrived between the two handles.
  */
@@ -181,7 +182,10 @@ export default function ArchiveExplorer({ archive, initialMission, initialType }
     return marked;
   }, [filtered]);
   const placed = filtered.filter((item) => item.arrivedOn !== null && item.arrivedOn >= from && item.arrivedOn <= through);
-  const clusters = clusterHardware(placed);
+  const metersPerDegree = METERS_PER_DEGREE[archive.body.id] ?? METERS_PER_DEGREE.moon;
+  const clusters = clusterHardware(placed, metersPerDegree);
+  const world = archive.body.name;
+  const onWorld = world === "Moon" ? "the Moon" : world;
   const activeCluster = clusters.find((cluster) => cluster.id === selectedCluster) ?? null;
   const activeHardware =
     activeCluster?.items.find((item) => item.id === selectedHardware) ?? activeCluster?.items[0] ?? null;
@@ -190,6 +194,9 @@ export default function ArchiveExplorer({ archive, initialMission, initialType }
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1.7fr)_minmax(18rem,0.9fr)]">
+      <div className="col-span-full">
+        <BodyTabs bodyId={archive.body.id} basePath="/" />
+      </div>
       <form className="surface col-span-full flex flex-wrap items-end gap-3 p-3" onSubmit={(event) => event.preventDefault()}>
         <label className="field" htmlFor="mission-filter">
           Mission
@@ -225,16 +232,16 @@ export default function ArchiveExplorer({ archive, initialMission, initialType }
             className="control w-full"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Eagle, rover, seismometer"
+            placeholder={archive.body.id === "mars" ? "Viking, rover, helicopter" : "Eagle, rover, seismometer"}
           />
         </label>
       </form>
 
-      <section className="surface min-h-0 p-3 lg:min-h-[34rem]" aria-labelledby="moon-map-title">
-        <p id="moon-map-title" className="eyebrow">
-          Moon, equirectangular
+      <section className="surface min-h-0 p-3 lg:min-h-[34rem]" aria-labelledby="archive-map-title">
+        <p id="archive-map-title" className="eyebrow">
+          {world}, equirectangular
         </p>
-        <div className="map-frame" role="group" aria-label="Map of NASA hardware on the Moon">
+        <div className="map-frame" role="group" aria-label={`Map of NASA hardware on ${onWorld}`}>
           {clusters.map((cluster) => (
             <button
               key={cluster.id}
@@ -259,7 +266,7 @@ export default function ArchiveExplorer({ archive, initialMission, initialType }
           ))}
         </div>
         <p className="quiet mt-3">
-          {clusters.length === 1 ? "1 place" : `${clusters.length} places`} on the Moon {during(startYear, endYear)}. Hardware within about 2 kilometers shares one
+          {clusters.length === 1 ? "1 place" : `${clusters.length} places`} on {onWorld} {during(startYear, endYear)}. Hardware within about 2 kilometers shares one
           marker. Gold is equipment on the surface, rust is an impact, and green is a site pin.
         </p>
       </section>
@@ -332,14 +339,14 @@ export default function ArchiveExplorer({ archive, initialMission, initialType }
           <div className="grid gap-3">
             <div>
               <p className="eyebrow">Archive</p>
-              <h2 className="m-0 text-2xl font-medium tracking-tight">Hardware left on the Moon</h2>
+              <h2 className="m-0 text-2xl font-medium tracking-tight">Hardware left on {onWorld}</h2>
             </div>
             <p className="m-0">
               Choose a marker, or a span of years. The map keeps everything dated {during(startYear, endYear)}. Every pin comes from a NASA
               coordinate. Records without one stay in the list below and are not guessed onto the map.
             </p>
             <p className="quiet m-0">
-              {placed.length} of {filtered.length} matching records {placed.length === 1 ? "is" : "are"} on the Moon {during(startYear, endYear)}.
+              {placed.length} of {filtered.length} matching records {placed.length === 1 ? "is" : "are"} on {onWorld} {during(startYear, endYear)}.
             </p>
           </div>
         )}

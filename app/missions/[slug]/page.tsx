@@ -16,13 +16,17 @@ async function MissionRecord({ params }: MissionPageProps) {
   return (
     <article className="surface grid gap-4 p-4 sm:p-5">
       <div>
-        <p className="eyebrow">Mission</p>
+        <p className="eyebrow">
+          <Link href={mission.body.id === "moon" ? "/" : `/?body=${mission.body.id}`}>{mission.body.name}</Link>
+        </p>
         <h2 className="m-0 text-2xl font-medium tracking-tight">{mission.name}</h2>
       </div>
       <p className="m-0">{mission.summary}</p>
       <Citations items={mission.summaryCitations} />
       <p className="m-0">
-        <Link href={`/?mission=${mission.id}`}>Show this mission on the map</Link>
+        <Link href={mission.body.id === "moon" ? `/?mission=${mission.id}` : `/?body=${mission.body.id}&mission=${mission.id}`}>
+          Show this mission on the map
+        </Link>
       </p>
       <ul className="m-0 grid list-none gap-3 p-0">
         {mission.hardware.map((item) => (

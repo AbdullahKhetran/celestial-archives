@@ -57,6 +57,7 @@ export type EventDetail = {
 };
 
 export type HardwareDetail = HardwareListItem & {
+  body: { id: string; name: string };
   nssdcaId: string | null;
   summaryCitations: Citation[];
   locations: LocationDetail[];
@@ -75,6 +76,7 @@ export type MissionListItem = {
 };
 
 export type MissionDetail = MissionListItem & {
+  body: { id: string; name: string };
   hardware: HardwareListItem[];
 };
 

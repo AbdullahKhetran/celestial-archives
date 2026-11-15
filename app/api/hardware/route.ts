@@ -1,5 +1,6 @@
+import { DEFAULT_BODY_ID } from "@/constants/bodies";
 import { filterHardware } from "@/app/lib/archive/filter";
-import { loadArchive } from "@/app/lib/archive/load";
+import { loadBody } from "@/app/lib/archive/load";
 import { jsonData, jsonError, queryMessage, readQuery, withArchive } from "@/app/lib/api/http";
 
 export async function GET(request: Request) {
@@ -7,9 +8,9 @@ export async function GET(request: Request) {
   if (!parsed.success) return jsonError(400, "invalid_query", queryMessage(parsed.error));
 
   return withArchive(async () => {
-    const archive = await loadArchive();
     const { mission, type, q, body } = parsed.data;
-    if (body && body !== archive.body.id) {
+    const archive = await loadBody(body ?? DEFAULT_BODY_ID);
+    if (!archive) {
       return jsonError(404, "body_not_found", "That celestial body is not in the archive.");
     }
     if (mission && !archive.missions.some((item) => item.id === mission)) {
@@ -19,6 +20,6 @@ export async function GET(request: Request) {
       return jsonError(404, "type_not_found", "No hardware type has that id.");
     }
     const items = filterHardware(archive.hardware, { mission, type, q });
-    return jsonData({ items, total: items.length });
+    return jsonData({ body: archive.body, items, total: items.length });
   });
 }

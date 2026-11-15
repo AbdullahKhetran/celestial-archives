@@ -1,5 +1,15 @@
-/** Hardware within this distance shares one marker. NSSDCA treats 0.001° as about 30 m. */
+/** Hardware within this distance shares one marker. NSSDCA treats 0.001° as about 30 m on the Moon. */
 export const CLUSTER_METERS = 2000;
+
+/**
+ * Degrees-to-meters scale used only to cluster pins.
+ * Moon follows the NSSDCA figure. Mars uses about 59 km per degree of latitude,
+ * so a landing platform and a rover that drove away do not share a marker.
+ */
+export const METERS_PER_DEGREE: Record<string, number> = {
+  moon: 30_000,
+  mars: 59_000,
+};
 
 /**
  * Earlier types name a shared site, so a lander wins over a small instrument.

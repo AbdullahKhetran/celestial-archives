@@ -8,7 +8,7 @@ import "@/app/styles/globals.css";
 export const metadata: Metadata = {
   title: "Celestial Archives",
   description:
-    "A map and timeline of NASA hardware left on the Moon. Coordinates and dates are copied from NASA sources.",
+    "A map and timeline of NASA hardware left on the Moon and Mars. Coordinates and dates are copied from NASA sources.",
 };
 
 const themeBoot = `(function(){try{if(localStorage.getItem("${THEME_STORAGE_KEY}")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})()`;
@@ -40,7 +40,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         </header>
         <main className="px-4 pt-4 pb-8 sm:px-6">{children}</main>
         <footer className="flex flex-col gap-3 px-4 pb-6 font-ui text-sm text-muted sm:flex-row sm:items-end sm:justify-between sm:px-6 dark:text-muted-inverse">
-          <span>Moon only. Coordinates are copied from the cited NASA pages.</span>
+          <span>Moon and Mars. Coordinates are copied from the cited NASA pages.</span>
           <Link href="/credits">Sources and Super Intelligence (SI) note</Link>
         </footer>
       </body>

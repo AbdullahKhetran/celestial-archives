@@ -123,10 +123,18 @@ function resolvePin(
   return null;
 }
 
-/** Builds the Moon snapshot the map, ledger, and list pages all read. */
-export function assembleArchive(rows: ArchiveRows): ArchiveSnapshot {
-  const moon = rows.bodies.find((body) => body.id === "moon");
-  if (!moon) throw new Error("The Moon is not in the database. Run npm run db:seed.");
+/**
+ * Builds one world's snapshot. The map, ledger, and list routes all read it.
+ * An empty database names the seed command. An unknown id does not, so the API can return 404.
+ */
+export function assembleArchive(rows: ArchiveRows, bodyId = "moon"): ArchiveSnapshot {
+  const body = rows.bodies.find((item) => item.id === bodyId);
+  if (!body) {
+    if (rows.bodies.length === 0) {
+      throw new Error("The archive is not in the database. Run npm run db:seed.");
+    }
+    throw new Error(`No celestial body has id ${bodyId}.`);
+  }
 
   const sourcesById = new Map(rows.sources.map((source) => [source.id, source]));
   const missionsById = new Map(rows.missions.map((mission) => [mission.id, mission]));
@@ -147,7 +155,7 @@ export function assembleArchive(rows: ArchiveRows): ArchiveSnapshot {
   }
 
   const hardware: HardwareListItem[] = rows.hardware
-    .filter((item) => missionsById.get(item.missionId)?.celestialBodyId === moon.id)
+    .filter((item) => missionsById.get(item.missionId)?.celestialBodyId === body.id)
     .map((item) => {
       const mission = missionsById.get(item.missionId);
       const type = typesById.get(item.typeId);
@@ -178,7 +186,7 @@ export function assembleArchive(rows: ArchiveRows): ArchiveSnapshot {
   }
 
   const missions = rows.missions
-    .filter((mission) => mission.celestialBodyId === moon.id)
+    .filter((mission) => mission.celestialBodyId === body.id)
     .map((mission) => {
       const items = hardwareByMission.get(mission.id) ?? [];
       return {
@@ -192,7 +200,11 @@ export function assembleArchive(rows: ArchiveRows): ArchiveSnapshot {
     })
     .sort((a, b) => a.name.localeCompare(b.name));
 
+  const bodyMissionIds = new Set(missions.map((mission) => mission.id));
+  const usedTypeIds = new Set(hardware.map((item) => item.type.id));
+
   const timeline: EventDetail[] = rows.events
+    .filter((event) => bodyMissionIds.has(event.missionId))
     .map((event) => {
       const mission = missionsById.get(event.missionId);
       if (!mission) throw new Error(`Event ${event.id} has no mission`);
@@ -220,9 +232,10 @@ export function assembleArchive(rows: ArchiveRows): ArchiveSnapshot {
     });
 
   return {
-    body: { id: moon.id, name: moon.name },
+    body: { id: body.id, name: body.name },
     missions,
     types: rows.types
+      .filter((type) => usedTypeIds.has(type.id))
       .map((type) => ({ id: type.id, name: type.name }))
       .sort((a, b) => a.name.localeCompare(b.name)),
     hardware,
@@ -231,10 +244,12 @@ export function assembleArchive(rows: ArchiveRows): ArchiveSnapshot {
 }
 
 export function hardwareDetail(rows: ArchiveRows, id: string): HardwareDetail | null {
-  const snapshot = assembleArchive(rows);
-  const item = snapshot.hardware.find((hardwareItem) => hardwareItem.id === id);
   const record = rows.hardware.find((hardwareItem) => hardwareItem.id === id);
-  if (!item || !record) return null;
+  const mission = record ? rows.missions.find((item) => item.id === record.missionId) : undefined;
+  if (!record || !mission) return null;
+  const snapshot = assembleArchive(rows, mission.celestialBodyId);
+  const item = snapshot.hardware.find((hardwareItem) => hardwareItem.id === id);
+  if (!item) return null;
 
   const sourcesById = new Map(rows.sources.map((source) => [source.id, source]));
   const locations: LocationDetail[] = rows.locations
@@ -258,6 +273,7 @@ export function hardwareDetail(rows: ArchiveRows, id: string): HardwareDetail | 
 
   return {
     ...item,
+    body: snapshot.body,
     nssdcaId: record.nssdcaId,
     summaryCitations: citationsFor(rows.citations, sourcesById, "summary", `hardware:${id}`),
     locations,
@@ -282,11 +298,14 @@ export function hardwareDetail(rows: ArchiveRows, id: string): HardwareDetail | 
 }
 
 export function missionDetail(rows: ArchiveRows, id: string): MissionDetail | null {
-  const snapshot = assembleArchive(rows);
+  const missionRow = rows.missions.find((item) => item.id === id);
+  if (!missionRow) return null;
+  const snapshot = assembleArchive(rows, missionRow.celestialBodyId);
   const mission = snapshot.missions.find((item) => item.id === id);
   if (!mission) return null;
   return {
     ...mission,
+    body: snapshot.body,
     hardware: snapshot.hardware
       .filter((item) => item.mission.id === id)
       .sort((a, b) => a.name.localeCompare(b.name)),

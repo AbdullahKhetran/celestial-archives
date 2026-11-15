@@ -64,6 +64,7 @@ export type HardwareInput = {
 
 export type MissionInput = {
   id: string;
+  celestialBodyId?: string;
   name: string;
   summary: string;
   summarySourceIds: string[];

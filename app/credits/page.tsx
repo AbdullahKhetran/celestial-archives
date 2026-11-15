@@ -11,7 +11,8 @@ async function CreditList() {
       </div>
       <p className="m-0">
         Coordinates, dates, and instrument lists were copied from the NASA pages below. When two NASA numbers
-        disagree, both are kept and the map uses the LROC-imaged claim. Missing coordinates were left blank.
+        disagree, both are kept. On the Moon the map uses the LROC-imaged claim. On Mars it uses the surveyed
+        mission coordinate. Missing coordinates were left blank.
       </p>
       <ul className="m-0 grid list-none gap-3 p-0">
         {rows.sources.map((source) => (
@@ -32,7 +33,8 @@ async function CreditList() {
       </p>
       <h2 className="m-0 text-2xl font-medium tracking-tight">Editing records</h2>
       <p className="m-0">
-        The API is read-only. Change a fact in <code>app/lib/seed/catalog.ts</code>, then run <code>npm run db:seed</code>.
+        The API is read-only. Change a lunar fact in <code>app/lib/seed/catalog.ts</code> or a Mars fact in{" "}
+        <code>app/lib/seed/mars.ts</code>, then run <code>npm run db:seed</code>.
         Set <code>DATABASE_URL</code> to a Neon connection string when you deploy. Without it, the app uses a Postgres
         file in <code>.data/</code>.
       </p>

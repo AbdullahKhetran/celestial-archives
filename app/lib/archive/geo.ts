@@ -1,17 +1,17 @@
-/** NSSDCA states that 0.001 degree is about 30 meters, so one degree is about 30 kilometers. */
-const METERS_PER_DEGREE = 30_000;
-
 type Coordinate = {
   latitudeDeg: number;
   longitudeDeg: number;
 };
 
-/** Flat approximation, used only to decide whether two pins belong to the same site. */
-export function approximateMeters(a: Coordinate, b: Coordinate): number {
-  const latitudeMeters = (a.latitudeDeg - b.latitudeDeg) * METERS_PER_DEGREE;
+/**
+ * Flat approximation, used only to decide whether two pins belong to the same site.
+ * The default scale is the lunar one: NSSDCA states that 0.001° is about 30 m.
+ */
+export function approximateMeters(a: Coordinate, b: Coordinate, metersPerDegree = 30_000): number {
+  const latitudeMeters = (a.latitudeDeg - b.latitudeDeg) * metersPerDegree;
   const midLatitude = ((a.latitudeDeg + b.latitudeDeg) / 2) * (Math.PI / 180);
   const longitudeMeters =
-    (a.longitudeDeg - b.longitudeDeg) * METERS_PER_DEGREE * Math.cos(midLatitude);
+    (a.longitudeDeg - b.longitudeDeg) * metersPerDegree * Math.cos(midLatitude);
   return Math.hypot(latitudeMeters, longitudeMeters);
 }
 
