@@ -6,7 +6,6 @@ import type { ArchiveSnapshot } from "@/types/archive";
 
 type HomeSearch = {
   body?: string;
-  mission?: string;
   type?: string;
 };
 
@@ -40,11 +39,7 @@ async function ArchiveHome({ searchParams }: HomeProps) {
   }
 
   return (
-    <ArchiveExplorer
-      archive={archive}
-      initialMission={params.mission}
-      initialType={params.type}
-    />
+    <ArchiveExplorer archive={archive} initialType={params.type} />
   );
 }
 

@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Script from "next/script";
-import { THEME_STORAGE_KEY } from "@/constants/theme";
-import ThemeToggle from "@/app/components/theme-toggle";
 import "@/app/styles/globals.css";
 
 export const metadata: Metadata = {
@@ -11,19 +8,14 @@ export const metadata: Metadata = {
     "A map and timeline of NASA hardware left on the Moon and Mars. Coordinates and dates are copied from NASA sources.",
 };
 
-const themeBoot = `(function(){try{if(localStorage.getItem("${THEME_STORAGE_KEY}")==="dark"){document.documentElement.classList.add("dark")}}catch(e){}})()`;
-
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className="h-full antialiased" suppressHydrationWarning>
+    <html lang="en" className="h-full antialiased">
       <body className="app-shell">
-        <Script id="theme-boot" strategy="beforeInteractive">
-          {themeBoot}
-        </Script>
-        <header className="flex flex-col gap-4 px-4 pt-5 sm:flex-row sm:items-end sm:justify-between sm:px-6">
+        <header className="flex shrink-0 flex-col gap-2 px-4 pt-3 sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <div>
-            <p className="eyebrow">NASA hardware left behind</p>
             <h1 className="m-0 text-3xl font-medium tracking-tight">Celestial Archives</h1>
+            <p className="m-0 mt-1 font-ui text-sm text-gold">NASA Hardware Left Behind</p>
           </div>
           <nav aria-label="Primary" className="flex flex-wrap items-center gap-4">
             <Link className="nav-link" href="/">
@@ -35,11 +27,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <Link className="nav-link" href="/credits">
               Credits
             </Link>
-            <ThemeToggle />
           </nav>
         </header>
-        <main className="px-4 pt-4 pb-8 sm:px-6">{children}</main>
-        <footer className="flex flex-col gap-3 px-4 pb-6 font-ui text-sm text-muted sm:flex-row sm:items-end sm:justify-between sm:px-6 dark:text-muted-inverse">
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto px-4 py-2 sm:px-6">{children}</main>
+        <footer className="flex shrink-0 flex-col gap-2 px-4 py-2 font-ui text-sm text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <span>Moon and Mars. Coordinates are copied from the cited NASA pages.</span>
           <Link href="/credits">Sources and Super Intelligence (SI) note</Link>
         </footer>

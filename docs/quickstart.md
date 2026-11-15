@@ -24,7 +24,7 @@ If the home page says the archive is not loaded, run `npm run db:seed` and refre
 
 A hardware record is `/hardware/[slug]`, for example [http://localhost:3000/hardware/apollo-11-descent-stage](http://localhost:3000/hardware/apollo-11-descent-stage). A mission is `/missions/[slug]`, for example [http://localhost:3000/missions/apollo-11](http://localhost:3000/missions/apollo-11).
 
-`/?mission=apollo-11&type=rover` opens the map with those filters. Search text and the selected pin are not in the URL yet.
+`/?type=rover` opens the map with that hardware type selected. Search text and the selected pin are not in the URL yet.
 
 ## Neon
 

@@ -24,6 +24,15 @@ async function CreditList() {
           </li>
         ))}
       </ul>
+      <h2 className="m-0 text-2xl font-medium tracking-tight">Base map</h2>
+      <p className="m-0">
+        The Moon picture is the LROC color mosaic published by the NASA Scientific Visualization Studio, a browse
+        image of Lunar Reconnaissance Orbiter data. It is a simple cylindrical map with 0° longitude at the center,
+        the same frame as the pins. The underlying LRO archive is at the{" "}
+        <a href="https://pds-geosciences.wustl.edu/missions/lro/">PDS Geosciences Node</a>. The file used here is{" "}
+        <a href="https://svs.gsfc.nasa.gov/4720/">lroc_color_2k.jpg</a> from SVS 4720. Mars does not yet have a packed
+        browse image. Its pins still use the published coordinates.
+      </p>
       <h2 className="m-0 text-2xl font-medium tracking-tight">Super Intelligence (SI)</h2>
       <p className="m-0">
         A Super Intelligence (SI) coding assistant drafted the application and the short summaries. The summaries stay
